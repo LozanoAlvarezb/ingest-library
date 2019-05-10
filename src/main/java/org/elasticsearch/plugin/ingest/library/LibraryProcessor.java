@@ -69,8 +69,8 @@ public class LibraryProcessor extends AbstractProcessor {
                     try {
                         URL obj = new URL(url);
                         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-//        con.setRequestMethod("GET");
                         if(con.getResponseCode()!=200){
+                            ingestDocument.setFieldValue(targetField, "ERROR");
                             return null;
                         }
                         else{
@@ -90,6 +90,7 @@ public class LibraryProcessor extends AbstractProcessor {
                             return null;
                         }
                     }catch(IOException ex){
+                        ingestDocument.setFieldValue(targetField, "ERROR");
                         return null;
                     }
                 }
