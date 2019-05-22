@@ -17,14 +17,11 @@
 
 package org.elasticsearch.plugin.ingest.library;
 
-import org.elasticsearch.common.collect.MapBuilder;
-//import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.ingest.Processor;
 import org.elasticsearch.plugins.IngestPlugin;
 import org.elasticsearch.plugins.Plugin;
+import org.elasticsearch.common.collect.MapBuilder;
 
-//import java.util.Arrays;
-//import java.util.List;
 import java.util.Map;
 
 public class IngestLibraryPlugin extends Plugin implements IngestPlugin {

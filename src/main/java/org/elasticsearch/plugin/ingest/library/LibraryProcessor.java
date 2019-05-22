@@ -17,31 +17,19 @@
 
 package org.elasticsearch.plugin.ingest.library;
 
-import org.elasticsearch.cli.SuppressForbidden;
+
 import org.elasticsearch.ingest.AbstractProcessor;
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.ingest.Processor;
-//import org.elasticsearch.SpecialPermission;
 
-
-//import java.net.URLConnection;
+import java.util.Arrays;
+import java.util.HashMap;
+//import java.util.Iterator;
 import java.util.Map;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.nio.charset.StandardCharsets;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import org.json.JSONObject;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
+import static org.elasticsearch.ingest.ConfigurationUtils.readBooleanProperty;
 import static org.elasticsearch.ingest.ConfigurationUtils.readStringProperty;
 
 public class LibraryProcessor extends AbstractProcessor {
@@ -50,52 +38,48 @@ public class LibraryProcessor extends AbstractProcessor {
 
     private final String field;
     private final String targetField;
+    private final String model;
+    private boolean includeVector;
 
-    public LibraryProcessor(String tag, String field, String targetField) throws IOException {
+    public LibraryProcessor(String tag, String field, String targetField, String model, boolean includeVector){
         super(tag);
         this.field = field;
         this.targetField = targetField;
+        this.includeVector = includeVector;
+        this.model = model;
     }
 
     @Override
-    @SuppressForbidden(reason = "Socket")
     public IngestDocument execute(IngestDocument ingestDocument) throws Exception {
+        Map<String, Object> additionalFields = new HashMap<>();
+        Map<String, String> topics = new HashMap<>();
 
-        // Test URL
-        String url = "http://127.0.0.1:5000/user/Nicholas";
+        String doc = ingestDocument.getFieldValue(field,String.class);
 
-        AccessController.doPrivileged((PrivilegedAction<Void>)
-                () -> {
-                    try {
-                        URL obj = new URL(url);
-                        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-                        if(con.getResponseCode()!=200){
-                            ingestDocument.setFieldValue(targetField, "ERROR");
-                            return null;
-                        }
-                        else{
-                            InputStream is = con.getInputStream();
-                            BufferedReader in = new BufferedReader(new InputStreamReader(is,StandardCharsets.UTF_8));
-                            StringBuilder response = new StringBuilder();
+        if(doc==null){
+            ingestDocument.setFieldValue(targetField, "ERROR: field"+field+"not found in document");
+            return ingestDocument;
+        }
 
-                            String inputLine;
-                            while ((inputLine = in.readLine()) != null) {
-                                response.append(inputLine);
-                            }
-                            in.close();
+        JSONObject response = LibraryClient.projectDoc(model,doc);
 
-                            //Read JSON response and print
-                            JSONObject myResponse = new JSONObject(response.toString());
-                            ingestDocument.setFieldValue(targetField, myResponse.getString("occupation"));
-                            return null;
-                        }
-                    }catch(IOException ex){
-                        ingestDocument.setFieldValue(targetField, "ERROR");
-                        return null;
-                    }
-                }
-        );
+//        Iterator<?> itr  = response.getJSONArray("topics").iterator();
+//        while (itr.hasNext())
+//        {
+//            JSONObject topic = (JSONObject) itr.next();
+//            topics.put(topic.getString("id"),topic.getString("description"));
+//        }
+//        additionalFields.put("topics",topics);
+        additionalFields.put("topics", response.getJSONArray("topics").toList());
 
+        if(includeVector){
+            double[] vector = Arrays.stream(response.get("vector").toString().replaceAll("\\[|\\]","")
+                    .split(",")).mapToDouble(Double::parseDouble)
+                .toArray();
+            additionalFields.put("vector",vector);
+        }
+
+        ingestDocument.setFieldValue(targetField, additionalFields);
 
         return ingestDocument;
     }
@@ -106,15 +90,33 @@ public class LibraryProcessor extends AbstractProcessor {
         return TYPE;
     }
 
+    String getField() {
+        return field;
+    }
+
+    String getTargetField() {
+        return targetField;
+    }
+
+    String getModel() {
+        return model;
+    }
+
+    boolean getIncludeVector() {
+        return includeVector;
+    }
+
     public static final class Factory implements Processor.Factory {
 
         @Override
         public LibraryProcessor create(Map<String, Processor.Factory> factories, String tag, Map<String, Object> config) 
             throws Exception {
             String field = readStringProperty(TYPE, tag, config, "field");
-            String targetField = readStringProperty(TYPE, tag, config, "target_field", "default_field_name");
+            String targetField = readStringProperty(TYPE, tag, config, "target_field", "library");
+            String model = readStringProperty(TYPE, tag, config, "model", "jrc-en-model/");
+            boolean includeVector = readBooleanProperty(TYPE, tag, config, "ignore_missing", false);
 
-            return new LibraryProcessor(tag, field, targetField);
+            return new LibraryProcessor(tag, field, targetField, model, includeVector);
         }
     }
 }

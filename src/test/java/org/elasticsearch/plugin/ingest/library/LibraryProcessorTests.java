@@ -20,37 +20,44 @@ package org.elasticsearch.plugin.ingest.library;
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.ingest.RandomDocumentPicks;
 import org.elasticsearch.test.ESTestCase;
+import org.junit.Before;
 
-
-
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 
 
 public class LibraryProcessorTests extends ESTestCase {
 
-    public void testThatProcessorWorks() throws Exception {
+    private LibraryProcessor processor;
+    private String sampleText;
 
+    @Before
+    public void createStandardProcessor(){
+     processor = new LibraryProcessor(randomAlphaOfLength(10),"Source_field","Target_field","jrc-en-model/",true);
+     sampleText = "Just a test to se what rolls";
+    }
 
+    public void baseTest() throws Exception {
+        Map<String, Object> libraryData = projectDoc(sampleText, processor);
+        assertThat(libraryData.keySet(), containsInAnyOrder("vector","topics"));
+        assertThat((Collection<?>) libraryData.get("topics"), hasSize(3));
+    }
+
+    private Map<String, Object> projectDoc(String doc, LibraryProcessor processor) throws Exception {
         Map<String, Object> document = new HashMap<>();
-        document.put("source_field", "Literally anything");
-        IngestDocument ingestDocument = RandomDocumentPicks.randomIngestDocument(random(), document);
+        document.put("source_field",doc);
+        document.put("includeVector",true);
 
-        LibraryProcessor processor = new LibraryProcessor(randomAlphaOfLength(10), "source_field", "target_field");
-        Map<String, Object> data = processor.execute(ingestDocument).getSourceAndMetadata();
+        IngestDocument ingestDocument = RandomDocumentPicks.randomIngestDocument(random(),document);
+        processor.execute(ingestDocument);
 
-        assertThat(data, hasKey("target_field"));
-        assertThat(data.get("target_field"), is(instanceOf(String.class)));
-
-
-
-        assertThat(data.get("target_field"), anyOf(equalTo("Network Engineer"), equalTo("ERROR")));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> libraryData = (Map<String, Object>) ingestDocument.getSourceAndMetadata().get("target_field");
+        return libraryData;
     }
 }
 

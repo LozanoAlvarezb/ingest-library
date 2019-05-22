@@ -5,12 +5,11 @@
         id: "my_pipeline"
         body:  >
           {
-            "description": "_description",
+            "description": "description",
             "processors": [
               {
                 "library" : {
-                  "field" : "field1",
-                  "target_field" : "field2"
+                  "field" : "field1"
                 }
               }
             ]
@@ -20,16 +19,17 @@
   - do:
       index:
         index: test
-        type: test
+        type: _doc
         id: 1
         pipeline: "my_pipeline"
-        body: {field1: "my_value"}
+        body: {field1: "Just a test to se what rolls"}
 
   - do:
       get:
         index: test
-        type: test
+        type: _doc
         id: 1
-  - match: { _source.field1: "my_value" }
-  - match: { _source.field2: "Network Engineer" }
+  - match: { _source.field1: "Just a test to se what rolls"}
+  - length: { _source.library.topics: 3 }
+
 
