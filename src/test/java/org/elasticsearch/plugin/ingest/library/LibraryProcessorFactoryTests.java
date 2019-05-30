@@ -37,7 +37,7 @@ public class LibraryProcessorFactoryTests extends ESTestCase {
         assertThat(processor.getTag(), equalTo(processorTag));
         assertThat(processor.getField(), equalTo("_field"));
         assertThat(processor.getTargetField(), equalTo("library"));
-        assertThat(processor.getModel(), equalTo("jrc-en-model/"));
+        assertThat(processor.getModel(), equalTo("jrc-en-model"));
         assertFalse(processor.getIncludeVector());
     }
 
@@ -56,7 +56,7 @@ public class LibraryProcessorFactoryTests extends ESTestCase {
     public void testIncludeVector() throws Exception {
         Map<String, Object> config = new HashMap<>();
         config.put("field", "_field");
-        config.put("ignore_missing", true);
+        config.put("includeVector", true);
 
 
         LibraryProcessor processor = factory.create(null, null, config);
@@ -65,7 +65,7 @@ public class LibraryProcessorFactoryTests extends ESTestCase {
         assertTrue(processor.getIncludeVector());
     }
 
-    public void Model() throws Exception {
+    public void testModel() throws Exception {
         Map<String, Object> config = new HashMap<>();
         config.put("field", "_field");
         config.put("model", "_model");
@@ -74,7 +74,7 @@ public class LibraryProcessorFactoryTests extends ESTestCase {
         LibraryProcessor processor = factory.create(null, null, config);
         assertThat(processor.getField(), equalTo("_field"));
         assertThat(processor.getModel(), equalTo("_model"));
-        assertTrue(processor.getIncludeVector());
+        assertFalse(processor.getIncludeVector());
     }
 
 

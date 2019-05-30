@@ -24,9 +24,9 @@ import org.elasticsearch.ingest.Processor;
 
 import java.util.Arrays;
 import java.util.HashMap;
-//import java.util.Iterator;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static org.elasticsearch.ingest.ConfigurationUtils.readBooleanProperty;
@@ -51,8 +51,18 @@ public class LibraryProcessor extends AbstractProcessor {
 
     @Override
     public IngestDocument execute(IngestDocument ingestDocument) throws Exception {
+
+        String[] models = {"jrc-en-model","jrc-es-model"};
+
+        if(!Arrays.stream(models).anyMatch(model::equals)){
+            ingestDocument.setFieldValue(targetField, "ERROR: unknown model "+model);
+            return ingestDocument;
+        }
+
         Map<String, Object> additionalFields = new HashMap<>();
-        Map<String, String> topics = new HashMap<>();
+        String topics_id = "";
+        JSONObject topic;
+
 
         String doc = ingestDocument.getFieldValue(field,String.class);
 
@@ -61,16 +71,18 @@ public class LibraryProcessor extends AbstractProcessor {
             return ingestDocument;
         }
 
+        additionalFields.put("model",model);
+
         JSONObject response = LibraryClient.projectDoc(model,doc);
 
-//        Iterator<?> itr  = response.getJSONArray("topics").iterator();
-//        while (itr.hasNext())
-//        {
-//            JSONObject topic = (JSONObject) itr.next();
-//            topics.put(topic.getString("id"),topic.getString("description"));
-//        }
-//        additionalFields.put("topics",topics);
-        additionalFields.put("topics", response.getJSONArray("topics").toList());
+        JSONArray topics = (JSONArray) response.get("topics");
+        for (int i = 0; i < 3; i++) {
+            topic = (JSONObject) topics.get(i);
+            topics_id += topic.get("name").toString()+" ";
+        }
+
+        additionalFields.put("topics",topics_id.trim());
+//        additionalFields.put("topics", response.getJSONArray("topics").toList());
 
         if(includeVector){
             double[] vector = Arrays.stream(response.get("vector").toString().replaceAll("\\[|\\]","")
@@ -113,8 +125,9 @@ public class LibraryProcessor extends AbstractProcessor {
             throws Exception {
             String field = readStringProperty(TYPE, tag, config, "field");
             String targetField = readStringProperty(TYPE, tag, config, "target_field", "library");
-            String model = readStringProperty(TYPE, tag, config, "model", "jrc-en-model/");
-            boolean includeVector = readBooleanProperty(TYPE, tag, config, "ignore_missing", false);
+            String model = readStringProperty(TYPE, tag, config, "model", "jrc-en-model");
+
+            boolean includeVector = readBooleanProperty(TYPE, tag, config, "includeVector", false);
 
             return new LibraryProcessor(tag, field, targetField, model, includeVector);
         }
