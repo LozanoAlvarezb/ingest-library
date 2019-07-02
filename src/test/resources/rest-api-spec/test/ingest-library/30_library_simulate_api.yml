@@ -51,5 +51,5 @@
 
   - is_true: docs.0.doc._source.field2.topics
   - is_true: docs.0.doc._source.field2.vector
-  - length: { _source.library.vector: 452 }
+  - length: { docs.0.doc._source.field2.vector: 452 }
 

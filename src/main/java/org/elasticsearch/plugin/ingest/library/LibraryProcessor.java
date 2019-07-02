@@ -24,7 +24,9 @@ import org.elasticsearch.ingest.Processor;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,7 +73,7 @@ public class LibraryProcessor extends AbstractProcessor {
             return ingestDocument;
         }
 
-        additionalFields.put("model",model);
+        additionalFields.put("model", model);
 
         JSONObject response = LibraryClient.projectDoc(model,doc);
 
@@ -88,7 +90,8 @@ public class LibraryProcessor extends AbstractProcessor {
             double[] vector = Arrays.stream(response.get("vector").toString().replaceAll("\\[|\\]","")
                     .split(",")).mapToDouble(Double::parseDouble)
                 .toArray();
-            additionalFields.put("vector",vector);
+            List<Double> vectorList = Arrays.stream(vector).boxed().collect(Collectors.toList());
+            additionalFields.put("vector",vectorList);
         }
 
         ingestDocument.setFieldValue(targetField, additionalFields);
