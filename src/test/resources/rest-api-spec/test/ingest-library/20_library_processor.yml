@@ -144,5 +144,117 @@
   - match: { _source.field1: "Just a test to se what rolls" }
   - match: { _source.library: "ERROR: unknown model _model" }
 
+---
+"Test model Detection es":
+  - do:
+      ingest.put_pipeline:
+        id: "my_pipeline"
+        body:  >
+          {
+            "description": "description",
+            "processors": [
+              {
+                "library" : {
+                  "field" : "field1",
+                  "modelDetection" : true
+                }
+              }
+            ]
+          }
+  - match: { acknowledged: true }
+
+  - do:
+      index:
+        index: test
+        type: _doc
+        id: 1
+        pipeline: "my_pipeline"
+        body: {field1: "Solo un texto para ver que pasa",
+              lang: "es"}
+
+  - do:
+      get:
+        index: test
+        type: _doc
+        id: 1
+  - match: { _source.field1: "Solo un texto para ver que pasa" }
+  - match: { _source.library.model: "jrc-es-model" }
+
+---
+"Test model Detection when model is setup":
+  - do:
+      ingest.put_pipeline:
+        id: "my_pipeline"
+        body:  >
+          {
+            "description": "description",
+            "processors": [
+              {
+                "library" : {
+                  "field" : "field1",
+                  "model" : "_model",
+                  "modelDetection" : true
+                }
+              }
+            ]
+          }
+  - match: { acknowledged: true }
+
+  - do:
+      index:
+        index: test
+        type: _doc
+        id: 1
+        pipeline: "my_pipeline"
+        body: {field1: "Solo un texto para ver que pasa",
+               lang: "es"}
+
+  - do:
+      get:
+        index: test
+        type: _doc
+        id: 1
+  - match: { _source.field1: "Solo un texto para ver que pasa" }
+  - match: { _source.library.model: "jrc-es-model" }
+
+
+---
+"Test unkown languaje":
+  - do:
+      ingest.put_pipeline:
+        id: "my_pipeline"
+        body:  >
+          {
+            "description": "description",
+            "processors": [
+              {
+                "library" : {
+                  "field" : "field1",
+                  "modelDetection" : true
+                }
+              }
+            ]
+          }
+  - match: { acknowledged: true }
+
+  - do:
+      index:
+        index: test
+        type: _doc
+        id: 1
+        pipeline: "my_pipeline"
+        body: {field1: "Solo un texto para ver que pasa",
+               lang: "it"}
+
+  - do:
+      get:
+        index: test
+        type: _doc
+        id: 1
+  - match: { _source.field1: "Solo un texto para ver que pasa" }
+  - match: { _source.library.model: "jrc-en-model" }
+
+
+
 
 

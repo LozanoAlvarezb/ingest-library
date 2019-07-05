@@ -37,7 +37,7 @@ public class LibraryProcessorTests extends ESTestCase {
 
     @Before
     public void createStandardProcessor(){
-     processor = new LibraryProcessor(randomAlphaOfLength(10),"Source_field","Target_field","jrc-en-model/",true);
+     processor = new LibraryProcessor(randomAlphaOfLength(10),"Source_field","Target_field","jrc-en-model/",false, false);
      sampleText = "Just a test to se what rolls";
     }
 

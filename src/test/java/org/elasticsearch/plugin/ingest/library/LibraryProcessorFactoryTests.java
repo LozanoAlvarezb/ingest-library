@@ -77,5 +77,16 @@ public class LibraryProcessorFactoryTests extends ESTestCase {
         assertFalse(processor.getIncludeVector());
     }
 
+    public void testModelDetection() throws Exception {
+        Map<String, Object> config = new HashMap<>();
+        config.put("field", "_field");
+        config.put("modelDetection", true);
+
+
+        LibraryProcessor processor = factory.create(null, null, config);
+        assertThat(processor.getField(), equalTo("_field"));
+        assertTrue(processor.getmodelDetection());
+    }
+
 
 }

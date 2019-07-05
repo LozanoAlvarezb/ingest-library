@@ -40,14 +40,16 @@ public class LibraryProcessor extends AbstractProcessor {
 
     private final String field;
     private final String targetField;
-    private final String model;
+    private String model;
     private boolean includeVector;
+    private boolean modelDetection;
 
-    public LibraryProcessor(String tag, String field, String targetField, String model, boolean includeVector){
+    public LibraryProcessor(String tag, String field, String targetField, String model, boolean includeVector, boolean modelDetection){
         super(tag);
         this.field = field;
         this.targetField = targetField;
         this.includeVector = includeVector;
+        this.modelDetection = modelDetection;
         this.model = model;
     }
 
@@ -56,7 +58,24 @@ public class LibraryProcessor extends AbstractProcessor {
 
         String[] models = {"jrc-en-model","jrc-es-model"};
 
-        if(!Arrays.stream(models).anyMatch(model::equals)){
+        if(modelDetection && ingestDocument.hasField("lang"))
+        {
+            switch (ingestDocument.getFieldValue("lang",String.class))
+            {
+                case "en":
+                    model = "jrc-en-model";
+                    break;
+
+                case "es":
+                    model = "jrc-es-model";
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        else if(!Arrays.stream(models).anyMatch(model::equals)){
             ingestDocument.setFieldValue(targetField, "ERROR: unknown model "+model);
             return ingestDocument;
         }
@@ -121,18 +140,25 @@ public class LibraryProcessor extends AbstractProcessor {
         return includeVector;
     }
 
+    boolean getmodelDetection(){
+        return modelDetection;
+    }
+
+
     public static final class Factory implements Processor.Factory {
 
         @Override
         public LibraryProcessor create(Map<String, Processor.Factory> factories, String tag, Map<String, Object> config) 
             throws Exception {
+
             String field = readStringProperty(TYPE, tag, config, "field");
             String targetField = readStringProperty(TYPE, tag, config, "target_field", "library");
             String model = readStringProperty(TYPE, tag, config, "model", "jrc-en-model");
-
             boolean includeVector = readBooleanProperty(TYPE, tag, config, "includeVector", false);
+            boolean modelDetection = readBooleanProperty(TYPE, tag, config, "modelDetection", false);
 
-            return new LibraryProcessor(tag, field, targetField, model, includeVector);
+
+            return new LibraryProcessor(tag, field, targetField, model, includeVector, modelDetection);
         }
     }
 }
