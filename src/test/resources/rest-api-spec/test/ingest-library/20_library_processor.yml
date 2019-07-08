@@ -32,6 +32,9 @@
   - match: {_source.field1: "Just a test to se what rolls"}
   - match: {_source.library.model: "jrc-en-model"}
   - is_true: _source.library.topics
+  - is_true: _source.library.topics.l0
+  - is_true: _source.library.topics.l1
+  - is_true: _source.library.topics.l2
   - is_false: _source.library.vector
 
 
@@ -69,6 +72,9 @@
         id: 1
   - match: { _source.field1: "Just a test to se what rolls" }
   - is_true: _source.library.topics
+  - is_true: _source.library.topics.l0
+  - is_true: _source.library.topics.l1
+  - is_true: _source.library.topics.l2
   - is_true: _source.library.vector
   - length: { _source.library.vector: 452 }
 
@@ -107,6 +113,9 @@
   - match: { _source.field1: "Just a test to se what rolls" }
   - match: { _source.library.model: "jrc-es-model" }
   - is_true: _source.library.topics
+  - is_true: _source.library.topics.l0
+  - is_true: _source.library.topics.l1
+  - is_true: _source.library.topics.l2
   - is_false: _source.library.vector
 
 ---

@@ -81,8 +81,8 @@ public class LibraryProcessor extends AbstractProcessor {
         }
 
         Map<String, Object> additionalFields = new HashMap<>();
+        Map<String, Object> topics = new HashMap<>();
         String topics_id = "";
-        JSONObject topic;
 
 
         String doc = ingestDocument.getFieldValue(field,String.class);
@@ -96,14 +96,12 @@ public class LibraryProcessor extends AbstractProcessor {
 
         JSONObject response = LibraryClient.projectDoc(model,doc);
 
-        JSONArray topics = (JSONArray) response.get("topics");
+        JSONArray jTopics = (JSONArray) response.get("topics");
         for (int i = 0; i < 3; i++) {
-            topic = (JSONObject) topics.get(i);
-            topics_id += topic.get("name").toString()+" ";
+            topics.put("l"+i,((JSONObject) jTopics.get(i)).get("name").toString());
         }
 
-        additionalFields.put("topics",topics_id.trim());
-//        additionalFields.put("topics", response.getJSONArray("topics").toList());
+        additionalFields.put("topics",topics);
 
         if(includeVector){
             double[] vector = Arrays.stream(response.get("vector").toString().replaceAll("\\[|\\]","")

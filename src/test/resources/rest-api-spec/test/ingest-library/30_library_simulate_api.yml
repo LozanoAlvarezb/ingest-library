@@ -23,6 +23,9 @@
         body: {docs: [ { _source: { field1: "Law is a system that regulates and ensures that individuals or a community adhere to the will of the state. State-enforced laws can be made by a collective legislature or by a single legislator, resulting in statutes, by the executive through decrees and regulations, or established by judges through precedent, normally in common law jurisdictions. Private individuals can create legally binding contracts, including arbitration agreements that may elect to accept alternative arbitration to the normal court process" } } ] }
 
   - is_true: docs.0.doc._source.field2.topics
+  - is_true: docs.0.doc._source.field2.topics.l0
+  - is_true: docs.0.doc._source.field2.topics.l1
+  - is_true: docs.0.doc._source.field2.topics.l2
 
 ---
 "Test library with vector":
