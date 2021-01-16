@@ -1,5 +1,5 @@
 
-# Elasticsearch library Ingest Processor
+# Elasticsearch LibrAIry Ingest Processor
 
 Integrate Artificial Inteligence in elasticsearch with LibrAIry
 
